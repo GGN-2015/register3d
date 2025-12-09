@@ -39,7 +39,7 @@ def get_weight_array(image_part:cp.ndarray) -> cp.ndarray:
 # 不带旋转，直接匹配
 # 返回最优的旋转情况
 def match_3d_data(full_image:cp.ndarray, image_part:cp.ndarray) -> Tuple[cp.ndarray, float]:
-    match_array = cupy_fft_match.match_arr(full_image, image_part, get_weight_array(image_part))
+    match_array = cupy_fft_match.match_arr(full_image, image_part, weight_arr:=get_weight_array(image_part))
 
     # 找到其中最小值出现的位置以及最小值
     posX, posY, posZ, score = find_3d_min_coords(match_array)
@@ -51,13 +51,13 @@ def match_3d_data(full_image:cp.ndarray, image_part:cp.ndarray) -> Tuple[cp.ndar
         posY:posY+image_part.shape[1],
         posZ:posZ+image_part.shape[2]
     ] = image_part
-    return moved_image_part, score
+    return moved_image_part, score / weight_arr.sum()
 
 # 在考虑旋转的前提下找到最优的旋转解
 def match_3d_data_rotate(full_image:cp.ndarray, image_part:cp.ndarray) -> Tuple[cp.ndarray, float]:
     best_moved_image_part = None
     best_score = math.inf
-    for x_angle_raw in tqdm(range(-150, 150, 15)):
+    for x_angle_raw in tqdm(range(-100, 100, 15)):
         x_angle = x_angle_raw / 10
 
         for y_angle_raw in range(-50, 50, 15):
